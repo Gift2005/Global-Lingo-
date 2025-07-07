@@ -1,0 +1,84 @@
+const languages = {
+  af: "Afrikaans", sq: "Albanian", am: "Amharic", ar: "Arabic", hy: "Armenian",
+  az: "Azerbaijani", eu: "Basque", be: "Belarusian", bn: "Bengali", bs: "Bosnian",
+  bg: "Bulgarian", ca: "Catalan", ceb: "Cebuano", "zh-CN": "Chinese (Simplified)",
+  "zh-TW": "Chinese (Traditional)", hr: "Croatian", cs: "Czech", da: "Danish",
+  nl: "Dutch", en: "English", eo: "Esperanto", et: "Estonian", tl: "Filipino",
+  fi: "Finnish", fr: "French", gl: "Galician", ka: "Georgian", de: "German",
+  el: "Greek", gu: "Gujarati", ht: "Haitian Creole", ha: "Hausa", he: "Hebrew",
+  hi: "Hindi", hmn: "Hmong", hu: "Hungarian", is: "Icelandic", ig: "Igbo",
+  id: "Indonesian", ga: "Irish", it: "Italian", ja: "Japanese", jw: "Javanese",
+  kn: "Kannada", kk: "Kazakh", km: "Khmer", ko: "Korean", lo: "Lao", la: "Latin",
+  lv: "Latvian", lt: "Lithuanian", mk: "Macedonian", mg: "Malagasy", ms: "Malay",
+  ml: "Malayalam", mt: "Maltese", mi: "Maori", mr: "Marathi", mn: "Mongolian",
+  my: "Myanmar (Burmese)", ne: "Nepali", no: "Norwegian", ny: "Nyanja", ps: "Pashto",
+  fa: "Persian", pl: "Polish", pt: "Portuguese", pa: "Punjabi", ro: "Romanian",
+  ru: "Russian", sm: "Samoan", gd: "Scots Gaelic", sr: "Serbian", st: "Sesotho",
+  sn: "Shona", sd: "Sindhi", si: "Sinhala", sk: "Slovak", sl: "Slovenian",
+  so: "Somali", es: "Spanish", su: "Sundanese", sw: "Swahili", sv: "Swedish",
+  tg: "Tajik", ta: "Tamil", te: "Telugu", th: "Thai", tr: "Turkish", uk: "Ukrainian",
+  ur: "Urdu", uz: "Uzbek", vi: "Vietnamese", cy: "Welsh", xh: "Xhosa",
+  yi: "Yiddish", yo: "Yoruba", zu: "Zulu"
+};
+
+const fromSelect = document.getElementById("from");
+const toSelect = document.getElementById("to");
+const translateBtn = document.getElementById("translateBtn");
+const outputDiv = document.getElementById("output");
+const inputText = document.getElementById("inputText");
+const swapBtn = document.getElementById("swapBtn");
+
+// Populate language options
+for (const code in languages) {
+  fromSelect.add(new Option(languages[code], code));
+  toSelect.add(new Option(languages[code], code));
+}
+
+fromSelect.value = "en";
+toSelect.value = "es";
+
+// Swap languages
+swapBtn.addEventListener("click", () => {
+  [fromSelect.value, toSelect.value] = [toSelect.value, fromSelect.value];
+});
+
+// Output helper
+function setOutput(text, type = "info") {
+  outputDiv.className = type;
+  outputDiv.textContent = text;
+}
+
+// Translation logic
+translateBtn.addEventListener("click", async () => {
+  const text = inputText.value.trim();
+  if (!text) {
+    setOutput("⚠️ Please enter text to translate.", "error");
+    return;
+  }
+
+  if (fromSelect.value === toSelect.value) {
+    setOutput("ℹ️ Source and target languages are the same.", "info");
+    return;
+  }
+
+  translateBtn.disabled = true;
+  setOutput("🔄 Translating...", "info");
+
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${fromSelect.value}|${toSelect.value}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const translated = data.responseData?.translatedText;
+
+    if (translated) {
+      setOutput(translated, "success");
+    } else {
+      setOutput("⚠️ No translation found.", "error");
+    }
+  } catch (err) {
+    setOutput("❌ An error occurred during translation.", "error");
+    console.error(err);
+  } finally {
+    translateBtn.disabled = false;
+  }
+});
